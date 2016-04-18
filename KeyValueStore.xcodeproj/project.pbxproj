@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F4019F641CC473B8008E2414 /* KeyValueStore+Types.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4019F631CC473B8008E2414 /* KeyValueStore+Types.swift */; };
 		F49F32DE1CBC6F97005E04C1 /* KeyValueStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F49F32DD1CBC6F97005E04C1 /* KeyValueStore.swift */; };
 		F49F32E61CBC6FAD005E04C1 /* Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F49F32E51CBC6FAD005E04C1 /* Tests.swift */; };
 		F49F32E81CBC6FAD005E04C1 /* KeyValueStore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F49F32CE1CBC6F2A005E04C1 /* KeyValueStore.framework */; };
@@ -23,6 +24,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		F4019F631CC473B8008E2414 /* KeyValueStore+Types.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "KeyValueStore+Types.swift"; path = "Source/KeyValueStore+Types.swift"; sourceTree = SOURCE_ROOT; };
 		F49F32CE1CBC6F2A005E04C1 /* KeyValueStore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = KeyValueStore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F49F32D91CBC6F70005E04C1 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Source/Info.plist; sourceTree = SOURCE_ROOT; };
 		F49F32DD1CBC6F97005E04C1 /* KeyValueStore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = KeyValueStore.swift; path = Source/KeyValueStore.swift; sourceTree = SOURCE_ROOT; };
@@ -73,6 +75,7 @@
 			children = (
 				F49F32D91CBC6F70005E04C1 /* Info.plist */,
 				F49F32DD1CBC6F97005E04C1 /* KeyValueStore.swift */,
+				F4019F631CC473B8008E2414 /* KeyValueStore+Types.swift */,
 			);
 			name = Source;
 			path = KeyValueStore;
@@ -195,6 +198,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F49F32DE1CBC6F97005E04C1 /* KeyValueStore.swift in Sources */,
+				F4019F641CC473B8008E2414 /* KeyValueStore+Types.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -382,6 +386,7 @@
 				F49F32D81CBC6F2A005E04C1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		F49F32EB1CBC6FAD005E04C1 /* Build configuration list for PBXNativeTarget "Tests" */ = {
 			isa = XCConfigurationList;
@@ -390,6 +395,7 @@
 				F49F32ED1CBC6FAD005E04C1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
