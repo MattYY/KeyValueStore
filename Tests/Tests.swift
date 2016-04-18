@@ -10,8 +10,12 @@ import XCTest
 @testable import KeyValueStore
 
 
+let DefaultFileName = "TestFile.plist"
+
 class Tests: XCTestCase {
     var store: KeyValueStore?
+    var key: String?
+    var value: NSCoding?
 }
 
 //Tests
@@ -19,9 +23,33 @@ extension Tests {
     
     override func tearDown() {
         super.tearDown()
-        deleteContainerWithName("TestStore")
+        deleteFileWithName(DefaultFileName)
     }
 
+    func testSyncLoadWithInvalidPathReturnsError() {
+        whenIIntializeAStoreWithAnInvalidPath()
+        thenSynchronousLoadReturnsFalse()
+    }
+    
+    func testAsyncLoadWithInvalidPathReturnsError() {
+        whenIIntializeAStoreWithAnInvalidPath()
+        thenAnAsynchronousLoadReturnsFalse()
+    }
+    
+    func testSavingAnNSDate() {
+        givenAStore()
+        givenALoadedStore()
+        whenISaveADateInTheDistantPast()
+        thenTheStoreReturnsADistantPastDate()
+    }
+    
+    func testSavingAnNSDatewithoutLoadingStoreReturnsNil() {
+        givenAStore()
+        whenISaveADateInTheDistantPast()
+        thenTheStoreShouldReturnANilDate()
+    }
+    
+    /*
     func testDateSave() {
         givenAnInitializedStore()
         whenISaveADistantPastDateForKeyDate()
@@ -42,16 +70,16 @@ extension Tests {
         whenINilTheDateStoredInDateKey()
         thenTheStoreShouldReturnANilDate()
     }
-    
+    */
 }
 
 
 //Given
 extension Tests {
     
+    /*
     func givenAnInitializedStore() {
         let directoryURL = createContainerFromName("TestStore")
-        
         store = try! KeyValueStore(directoryURL: directoryURL, plistName: "TestFile", logOutput: true)
     }
     
@@ -63,34 +91,66 @@ extension Tests {
         }
         waitForExpectationsWithTimeout(3, handler: nil)
     }
+    */
+    
+    
+    func givenAStore() {
+        let docPath = documentsPathWithName(DefaultFileName)
+        store = KeyValueStore(filePath: docPath, logOutput: true)
+    }
+    
+    func givenALoadedStore() {
+        store?.load()
+    }
 }
 
 //When
 extension Tests {
     
-    func whenISaveADistantPastDateForKeyDate() {
+    
+    func whenISaveADateInTheDistantPast() {
         let date = NSDate.distantPast()
-        store!.setDate(date, forKey: "date")
+        
+        key = "date"
+        value = date
+        
+        store!.setValue(date, forKey: key!)
     }
     
-    func whenINilTheDateStoredInDateKey() {
-        store!.setDate(nil, forKey: "date")
+
+    func whenIIntializeAStoreWithAnInvalidPath() {
+        let docPath = documentsPathWithName("")
+        store = KeyValueStore(filePath: docPath)
     }
-    
 }
 
 
 //Then
 extension Tests {
     
+   
     func thenTheStoreReturnsADistantPastDate() {
-        XCTAssertEqual(NSDate.distantPast(), store!.dateForKey("date"))
+        XCTAssertEqual(NSDate.distantPast(), store!.valueForKey(key!))
     }
     
     func thenTheStoreShouldReturnANilDate() {
-        XCTAssertEqual(nil, store!.dateForKey("date"))
+        let date: NSDate? = store!.valueForKey(key!)
+        XCTAssertNil(date)
     }
     
+    func thenSynchronousLoadReturnsFalse() {
+        XCTAssertEqual(store!.load(), false)
+    }
+    
+    func thenAnAsynchronousLoadReturnsFalse() {
+        let expectation = expectationWithDescription("Load")
+        store!.load() {
+            error in
+            XCTAssertNotNil(error)
+            expectation.fulfill()
+        }
+        waitForExpectationsWithTimeout(3, handler: nil)
+    }
 }
 
 
@@ -99,29 +159,23 @@ extension Tests {
 
 //MARK: - Utilities -
 extension XCTestCase {
-    private func urlWithName(name: String) -> NSURL {
+    
+    
+    private func documentsPathWithName(name: String) -> String {
         let documentsPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0]
-        let fullPath = documentsPath.stringByAppendingString("/\(name)")
-        
-        return NSURL(fileURLWithPath: fullPath, isDirectory: false)
+        return documentsPath.stringByAppendingString("/\(name)")
     }
     
-    private func createContainerFromName(name: String) -> NSURL {
-        let url = urlWithName(name)
+    private func deleteFileWithName(name: String) {
+        let path = documentsPathWithName(name)
         
-        //Create the container if necessary
-        var error:NSError?
-        if !url.checkResourceIsReachableAndReturnError(&error) {
-            try! NSFileManager.defaultManager().createDirectoryAtURL(
-                url, withIntermediateDirectories: true, attributes: nil)
+        do {
+            try NSFileManager.defaultManager().removeItemAtPath(path)
         }
-        
-        print("Container URL: \(url.absoluteString)")
-        return url
+        catch {}
     }
-    
-    private func deleteContainerWithName(name: String) {
-        let url = urlWithName(name)
-        try! NSFileManager.defaultManager().removeItemAtURL(url)
-    }
+ 
 }
+
+
+
