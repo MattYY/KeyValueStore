@@ -38,76 +38,62 @@ extension Tests {
     
     func testSavingAnNSDate() {
         givenAStore()
-        givenALoadedStore()
+        whenILoadAStoreSynchronously()
         whenISaveADateInTheDistantPast()
-        thenTheStoreReturnsADistantPastDate()
+        thenTheStoreReturnsTheCorrectDate()
+    }
+    
+    func testSavingAnInt() {
+        givenAStore()
+        whenILoadAStoreSynchronously()
+        whenISaveAnInt()
+        thenTheStoreReturnsTheCorrectInt()
     }
     
     func testSavingAnNSDatewithoutLoadingStoreReturnsNil() {
         givenAStore()
         whenISaveADateInTheDistantPast()
-        thenTheStoreShouldReturnANilDate()
+        thenTheStoreReturnsANilValue()
     }
     
-    /*
-    func testDateSave() {
-        givenAnInitializedStore()
-        whenISaveADistantPastDateForKeyDate()
-        thenTheStoreReturnsADistantPastDate()
-    }
-    
-    func testNilingDate() {
-        givenAnInitializedStore()
-        whenISaveADistantPastDateForKeyDate()
-        thenTheStoreReturnsADistantPastDate()
-    }
-    
-    func testDataIsPreservedBetweenStoreInstances() {
-        givenAnInitializedStore()
-        whenISaveADistantPastDateForKeyDate()
-        thenTheStoreReturnsADistantPastDate()
+    func testDeletingAStoreRemovesFileAndIsUnloaded() {
+        givenAStore()
+        whenILoadAStoreSynchronously()
+        thenTheBackingPlistExists()
         
-        whenINilTheDateStoredInDateKey()
-        thenTheStoreShouldReturnANilDate()
+        whenIDeleteTheStore()
+        
+        thenTheBackingPlistIsDeleted()
+        thenTheStoreIsInAnUnloadedState()
     }
-    */
+    
+    func testAnUnloadedStoreIsProperlyReloaded() {
+        givenAStore()
+        whenILoadAStoreSynchronously()
+        whenISaveADateInTheDistantPast()
+        
+        thenUnloadTheStore()
+        thenTheStoreReturnsANilValue()
+        
+        whenILoadAStoreAsynchronously()
+        thenTheStoreReturnsTheCorrectDate()
+    }
 }
 
 
 //Given
 extension Tests {
     
-    /*
-    func givenAnInitializedStore() {
-        let directoryURL = createContainerFromName("TestStore")
-        store = try! KeyValueStore(directoryURL: directoryURL, plistName: "TestFile", logOutput: true)
-    }
-    
-    func givenTheBackingFileHasBeenLoaded() {
-        let expectation = expectationWithDescription("Load")
-        store!.load() {
-            error in
-            expectation.fulfill()
-        }
-        waitForExpectationsWithTimeout(3, handler: nil)
-    }
-    */
-    
-    
     func givenAStore() {
         let docPath = documentsPathWithName(DefaultFileName)
         store = KeyValueStore(filePath: docPath, logOutput: true)
     }
     
-    func givenALoadedStore() {
-        store?.load()
-    }
+    
 }
 
 //When
 extension Tests {
-    
-    
     func whenISaveADateInTheDistantPast() {
         let date = NSDate.distantPast()
         
@@ -117,10 +103,35 @@ extension Tests {
         store!.setValue(date, forKey: key!)
     }
     
+    func whenISaveAnInt() {
+        let number = NSNumber(integer: 10)
+        
+        key = "int"
+        value = number
+        
+        store!.setValue(number, forKey: key!)
+    }
 
     func whenIIntializeAStoreWithAnInvalidPath() {
         let docPath = documentsPathWithName("")
         store = KeyValueStore(filePath: docPath)
+    }
+    
+    func whenIDeleteTheStore() {
+        try! store!.delete()
+    }
+    
+    func whenILoadAStoreSynchronously() {
+        store!.load()
+    }
+    
+    func whenILoadAStoreAsynchronously() {
+        let expectation = expectationWithDescription("Load")
+        store!.load() {
+            error in
+            expectation.fulfill()
+        }
+        waitForExpectationsWithTimeout(3, handler: nil)
     }
 }
 
@@ -129,15 +140,25 @@ extension Tests {
 extension Tests {
     
    
-    func thenTheStoreReturnsADistantPastDate() {
-        XCTAssertEqual(NSDate.distantPast(), store!.valueForKey(key!))
+    func thenTheStoreReturnsTheCorrectInt() {
+        let sourceValue = (value as? NSNumber)!.integerValue
+        let storeValue: NSNumber? = store!.valueForKey(key!)
+        
+        XCTAssertEqual(sourceValue, storeValue!.integerValue)
     }
     
-    func thenTheStoreShouldReturnANilDate() {
+    func thenTheStoreReturnsTheCorrectDate() {
+        let sourceValue = (value as! NSDate)
+        let storeValue: NSDate? = store!.valueForKey(key!)
+        
+        XCTAssertEqual(sourceValue, storeValue!)
+    }
+    
+    func thenTheStoreReturnsANilValue() {
         let date: NSDate? = store!.valueForKey(key!)
         XCTAssertNil(date)
     }
-    
+
     func thenSynchronousLoadReturnsFalse() {
         XCTAssertEqual(store!.load(), false)
     }
@@ -151,6 +172,28 @@ extension Tests {
         }
         waitForExpectationsWithTimeout(3, handler: nil)
     }
+    
+    func thenTheBackingPlistExists() {
+        let fileExists = NSFileManager.defaultManager().fileExistsAtPath(documentsPathWithName(DefaultFileName))
+        XCTAssertTrue(fileExists)
+    }
+    
+    func thenTheBackingPlistIsDeleted() {
+        let fileExists = NSFileManager.defaultManager().fileExistsAtPath(documentsPathWithName(DefaultFileName))
+        XCTAssertFalse(fileExists)
+    }
+    
+    func thenTheStoreIsInAnUnloadedState() {
+        XCTAssertFalse(store!.isLoaded)
+    }
+    
+    func thenUnloadTheStore() {
+        let expectation = expectationWithDescription("unload")
+        store!.unload { 
+            expectation.fulfill()
+        }
+        waitForExpectationsWithTimeout(3, handler: nil)
+    }
 }
 
 
@@ -159,8 +202,6 @@ extension Tests {
 
 //MARK: - Utilities -
 extension XCTestCase {
-    
-    
     private func documentsPathWithName(name: String) -> String {
         let documentsPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0]
         return documentsPath.stringByAppendingString("/\(name)")
