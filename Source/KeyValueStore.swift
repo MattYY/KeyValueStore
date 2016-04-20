@@ -13,7 +13,7 @@ import Foundation
 /// to easily create unique storage instances by passing in a `filePath` that is passed in during
 /// class instantiation. This is convenient if you want to quickly switch preference states.
 ///
-/// To maintain a synchronous interface but write to disk off the main thread an in-memory 
+/// To maintain a synchronous interface but write to disk off the main thread an in-memory
 /// dictionary (`data`) is kept in sync with a backing plist file. This synchronization
 /// commences once one of the `load` methods is called (load or load:) which is necessary precusor
 /// for using the store. Conversely the `unload` can be used "empty" the in-memory storage object
@@ -22,7 +22,6 @@ import Foundation
 /// That said, the intention of this class is to support a relatively small amount of key-value
 /// pairs so consider other implementations if you find yourself needing to store thousands or
 /// even hundreds of items.
-///
 public class KeyValueStore {
     
     //MARK: Private
@@ -32,7 +31,7 @@ public class KeyValueStore {
         queue.qualityOfService = .Background
         return queue
     }()
-
+    
     ///In-memory storage for the key-value pairs.
     private(set) internal var data: [String: NSCoding] = [:]
     
@@ -59,15 +58,14 @@ public class KeyValueStore {
     /// file is not created until one of the `load` methods is called.  If the `filePath`
     /// is an invalid path the store instance will be unusable.
     ///
-    /// - `filePath`: Path to the backing string file.  If none exists one will be
-    ///   be created at the specified path.
+    /// - parameter filePath: Path to the backing string file.  If none exists one will be
+    ///                       be created at the specified path.
     ///
-    /// - `logOutput`: An optional flag that determines whether debugging info is printed
-    ///   to the console.
-    ///
+    /// - parameter logOutput: An optional flag that determines whether debugging info is printed
+    ///                        to the console.
     public required init(filePath: String, logOutput: Bool = false) {
         self.filePath = filePath
-
+        
         //Logging
         loggingOn = logOutput
     }
@@ -85,8 +83,7 @@ extension KeyValueStore {
     /// the store is stuck in an unloaded state and can only be "fixed" by creating a new
     /// instance with a valid `filePath`.
     ///
-    /// Return a `Bool` to represent whether the resulting state is loaded.
-    ///
+    /// - returns: a `Bool` to represent whether the resulting state is loaded.
     public func load() -> Bool {
         guard !isLoaded else {
             Log("Calling `load` but store is already loaded.")
@@ -104,9 +101,9 @@ extension KeyValueStore {
     /// Has similar functionality to `load` however disk operations occur asynchronously
     /// on a background queue.
     ///
-    /// - `completion` : An optional block that is called after the backing file is loaded or
-    ///   created. If `filePath` is cannot be read or written to/from an `InvalidFilePath`
-    ///   error will be returned.
+    /// - parameter completion: An optional block that is called after the backing file is loaded
+    ///                         or created. If `filePath` is cannot be read or written to/from an
+    ///                         `InvalidFilePath` error will be returned. Called on the main queue.
     ///
     public func load(completion: ((error: ErrorType?) -> Void)?) {
         guard !isLoaded else {
@@ -127,9 +124,12 @@ extension KeyValueStore {
     
     
     /// Asynchronously empties the store's in-memory `data` object but does not delete the
-    /// backing plist file. Any data that may be in the process of saving will be commited to disk 
+    /// backing plist file. Any data that may be in the process of saving will be commited to disk
     /// before `data`'s contents is released. After calling `unload` the store will be in an
     /// unusable state until load or load(_:) is called.
+    ///
+    /// - parameter completion: An optional block that will be called when unload completes.
+    ///                         Called on the main queue.
     public func unload(completion: (() -> Void)? = nil) {
         queue.addOperationWithBlock {
             dispatch_async(dispatch_get_main_queue()) {
@@ -144,6 +144,8 @@ extension KeyValueStore {
     /// Synchronously deletes the store's backing plist file and empties the in-memory data object.
     /// Calling load or load(_:) after this point will result in a fresh plist being created at
     /// the `filePath` specified during instantiation.
+    ///
+    /// - throws: An error returned from a NSFileManager `removeItemAtPath` try.
     public func delete() throws {
         queue.cancelAllOperations()
         
@@ -163,9 +165,10 @@ extension KeyValueStore {
     /// If the store is in an unloaded state `setValue` will return without setting the in-memory
     /// object or underlying backing file.
     ///
-    /// - `value` : must conform to NSCoding
-    /// - `key` : must be a String
+    /// - parameter value: A value that conforms to NSCoding. Passing nil will remove
+    ///                    the value from the store.
     ///
+    /// - parameter key: A String that is to be used as the identifying key.
     public func setValue<T: NSCoding>(value: T?, forKey key: String) {
         guard isLoaded else {
             Log("You must call one of the `load` methods before setting a new value on the store.")
@@ -177,7 +180,9 @@ extension KeyValueStore {
     }
     
     
-    /// Return a value for a `key`.  If no value exists return nil.
+    /// - parameter key: A String representing the storage location identifier.
+    ///
+    /// - returns: a value for a `key`.  If no value exists return nil.
     public func valueForKey<T: NSCoding>(key: String) -> T? {
         guard isLoaded else {
             Log("Attempting to get a value on a store that is not loaded.")
@@ -243,7 +248,6 @@ extension KeyValueStore {
         }
     }
 }
-
 
 
 //MARK: - Log -
